@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1535323004913.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D367C80",
+    "lastKnownWriteTime" : 1536764031,
+    "last_content_update" : 1536764031198,
+    "path" : "~/Course_catologue_project/better_visualizations.R",
+    "project_path" : "better_visualizations.R",
+    "properties" : {
+        "cursorPosition" : "100,35",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

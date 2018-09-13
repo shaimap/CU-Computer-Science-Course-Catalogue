@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1536723944738.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C9233EFF",
+    "lastKnownWriteTime" : 1536782297,
+    "last_content_update" : 1536782297354,
+    "path" : "~/Course_catologue_project/Webscraping CUReviews.R",
+    "project_path" : "Webscraping CUReviews.R",
+    "properties" : {
+        "cursorPosition" : "49,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1536846635942.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "E7E960E8",
+    "lastKnownWriteTime" : 1536010175,
+    "last_content_update" : 1536010175,
+    "path" : "~/Course_catologue_project/Preprocessing time and location data.R",
+    "project_path" : "Preprocessing time and location data.R",
+    "properties" : {
+        "cursorPosition" : "128,2",
+        "scrollLine" : "100"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
