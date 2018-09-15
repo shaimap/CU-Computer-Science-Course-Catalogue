@@ -439,11 +439,30 @@ vis_net_paths_multiple <- function(raw_edge_data, raw_nodes_data, course_code, c
     original_edges <- cbind(original_edges,attributes)
     names(original_edges) <- c("to","from", "Relationship")
     original_edges <- unique(original_edges)
-    shortest <- all_shortest_paths(g,
-                                   from = c("Source"), 
-                                   to = c(course_code), 
-                                   mode = "out",
-                                   weights = rep(1, gsize(g)))
+    shortest <- tryCatch({
+      all_shortest_paths(g,
+                        from = c("Source"), 
+                        to = c(course_code), 
+                        mode = "out",
+                        weights = rep(1, gsize(g)))
+    },
+    error=function(cond) {
+      return (NULL)
+    },
+    warning=function(cond) {
+      all_shortest_paths(g,
+                         from = c("Source"), 
+                         to = c(course_code), 
+                         mode = "out",
+                         weights = rep(1, gsize(g)))
+    },
+    finally={
+      print ("done")
+    })
+    if(is.null(shortest)){
+      return (NULL)
+    }
+    
     g_nodes <- data.frame(t(sapply(shortest$res, as_ids)), stringsAsFactors = FALSE)
     g_nodes <- unique(g_nodes)
     if(ncol(g_nodes) ==0){

@@ -61,7 +61,7 @@ body <- dashboardBody(
              <br><ul><li>A scheduler into which you can input and rate your courses to retrieve all possible course schedules, and map visualizations of locations at which the courses occur.</li>
              <li>A CS course relationship visualizer which allows you to graphically observe relationships between different prerequisite and corequisite courses with respect to the courses you have taken and a course of interest.</li></ul>
              <br>Note: I am just a student at Cornell and am not affiliated with the creation of the official course catalogue. I know that this app may be subject to errors.
-             If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu.</br>")
+             If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu. Most of the code for this app is on github if you are interested.</br>")
       )
   ),
     tabItem(
