@@ -281,7 +281,6 @@ server <- function(input, output,session) {
   })
   output$courses_possible <- renderVisNetwork({
     req(input$generate_vis)
-    print(possible_vis())
     validate(
       need(possible_vis(),"This visualization does not exist for your selected course combinations."
       )
@@ -317,9 +316,6 @@ server <- function(input, output,session) {
   df <- eventReactive(input$course_add | !is.null(input$select_button), {
     req(input$courses_selected)
     req(input$course_add)
-    print(paste("courseadd:",input$"course_add"))
-    print(paste("select_button:",input$"select_button"))
-    print(paste("select:", rv$select))
     x <- str_split(input$courses_selected," ") %>% unlist()
     input_course <- paste(x[1],x[2])
     if(!is.null(input$select_button)){
@@ -355,7 +351,6 @@ server <- function(input, output,session) {
       rv$course_title_codes <- c(rv$course_title_codes, input_course)
     }
     df <- data.frame(course_title_codes = rv$course_title_codes, weight = rv$weight, stringsAsFactors = FALSE)
-    print(df)
     return (df)
   })
   
@@ -407,8 +402,6 @@ server <- function(input, output,session) {
   scheds <- eventReactive(input$generate_scheds,{
     req(input$time_pref)
     req(input$generate_scheds)
-    print(paste("gen:",input$generate_scheds))
-    print(paste("rvgen:", rv$gen))
     if(!is.null(df())){
     schedules <-  attain_schedules(df(), data, morning = input$time_pref)
     return (schedules)
