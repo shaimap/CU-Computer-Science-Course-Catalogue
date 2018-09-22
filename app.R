@@ -55,19 +55,30 @@ body <- dashboardBody(
       tabName = "info",
       div(id = 'logo',
           img(id = 'Cornell_University_seal.svg', src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Cornell_University_seal.svg/768px-Cornell_University_seal.svg.png', height = '100px', align = 'right')),
-      tags$h2(HTML("Welcome to the Unofficial CU Computer Science Course Catalogue!")),
-      tags$div(
+      tags$h1(HTML("Welcome to the Unofficial CU Computer Science Course Catalogue!")),
+      tags$h4(
         HTML("<br>This web app is a course catalogue specially tailored to CS students. Click on the different tabs and explore!</br>
 
              <br>Summary of Features:</br>
-             <br><ul><li>A scheduler into which you can input and rate your courses to retrieve all possible course schedules, and map visualizations of locations at which the courses occur.</li>
+             <br><ul><li>A scheduler into which you can input and rate your courses to retrieve all possible course schedules, and a map visualization of locations at which the selected class sections occur.</li>
              <li>A CS course relationship visualizer which allows you to graphically observe relationships between different prerequisite and corequisite courses with respect to the courses you have taken and a course of interest.</li></ul>
              <br>Note: I am just a student at Cornell and am not affiliated with the creation of the official course catalogue. I know that this app may be subject to errors.
              If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu. Most of the code for this app is on github if you are interested.</br>")
+      ),
+      tags$h3(
+        HTML("My Contact Info:")
+        ),
+        socialButton(
+          url = "https://www.linkedin.com/in/shaima-parveen/",
+          type = "linkedin"
+        ),
+        socialButton(
+          url = "https://github.com/shaimap",
+          type = "github"
       )
   ),
     tabItem(
-      tags$h2(HTML("Make a Schedule")),
+      tags$h1(HTML("Make a Schedule")),
       tabName = "scheduler",
       title = "Create a Schedule",
       fluidRow(boxPlus(title = "Courses of Interest",
@@ -120,7 +131,7 @@ body <- dashboardBody(
                         footer_padding = FALSE,
                     leafletOutput("mymap")))),
   tabItem(
-    tags$h2(HTML("<center>Visualize your course relationships</center>")),
+    tags$h1(HTML("<center>Visualize your course relationships</center>")),
     tabName = "prereq_coreq",
     title = "Visualize relationships between your courses",
     fluidRow(boxPlus(title = "Select your courses",
