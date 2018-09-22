@@ -140,12 +140,12 @@ course_edges <- function(raw_edge_df, course_code){
     tokens_prereq <- courses_extract(prereq)
     prereq_bool <-length(tokens_prereq)==1 & tokens_prereq[[1]]==prereq 
     if(!prereq_bool){
-    edges <- create_edges(edges, tokens_prereq, prereq, "Prerequisite")
+      edges <- create_edges(edges, tokens_prereq, prereq, "Prerequisite")
     }
     tokens_coreq <- courses_extract(coreq)
     coreq_bool <- length(tokens_coreq)==1 & tokens_coreq[[1]]==coreq
     if(!coreq_bool){
-    edges <- create_edges(edges, tokens_coreq, coreq, "Corequisite")
+      edges <- create_edges(edges, tokens_coreq, coreq, "Corequisite")
     }
     new_node = paste("(",prereq,"); (",coreq,")", sep = "")
     l1 = list(prereq)
@@ -236,13 +236,13 @@ tokenize <- function(info){
 potential_courses <- function(raw_edge_df, course_code){
   non_na_prereq <- raw_edge_df %>% filter(!is.na(prereq))
   indices_prereq <- as.vector(sapply(non_na_prereq$prereq, function(x){
-      return (check_prereq_coreq(x, course_code))
+    return (check_prereq_coreq(x, course_code))
   }))
   prereq_rows <- non_na_prereq[indices_prereq, ]
   non_na_coreq <- raw_edge_df %>% filter(!is.na(coreq))
   indices_coreq <- as.vector(sapply(non_na_coreq$coreq, function(x){
-      return (check_prereq_coreq(x, course_code))
-      }))
+    return (check_prereq_coreq(x, course_code))
+  }))
   coreq_rows <- non_na_coreq[indices_coreq, ]
   rows <- rbind(prereq_rows,coreq_rows)
   return (rows)
@@ -250,8 +250,8 @@ potential_courses <- function(raw_edge_df, course_code){
 
 
 outgoing_edges<- function(raw_edge_df, course_code){
-    rows <- potential_courses(raw_edge_df, course_code)
-
+  rows <- potential_courses(raw_edge_df, course_code)
+  
   edges <- c("to", "from", "Relationship")
   
   edges <- apply(rows,1, function(x){
@@ -293,23 +293,26 @@ courses_taken_in_avail_course <- function(courses_taken, avail_course){
             & courses_taken_in_avail_course(courses_taken, "(CS 2800, MATH 3320, MATH 3340, MATH 3360, MATH 4340)"))
   }
   else{
-  tokens <- courses_extract(avail_course)
-  for(i in 1:length(tokens)){
-     x <- tokens[[i]]
-    if("MATH 3XXX" %in% x){
-      tokens[[i]] <- tokens[[i]][tokens[[i]]!="MATH 3XXX"]
-      tokens[[i]] <- c(tokens[[i]], math_course_codes_greater_3000)
+    tokens <- courses_extract(avail_course)
+    math_course_codes_greater_3000 <- readRDS("math_course_codes_greater_3000.Rda")$course_title_codes
+    for(i in 1:length(tokens)){
+      x <- tokens[[i]]
+      if("MATH 3XXX" %in% x){
+        tokens[[i]] <- tokens[[i]][tokens[[i]]!="MATH 3XXX"]
+        tokens[[i]] <- c(tokens[[i]], math_course_codes_greater_3000)
+      }
     }
-  }
-  for (v in tokens){
-    if(!(any(v %in% courses_taken))){
-      return (FALSE)
+    for (v in tokens){
+      if(!(any(v %in% courses_taken))){
+        return (FALSE)
+      }
     }
-  }
-  return (TRUE)
+    return (TRUE)
   }
 }
 graph_object <- function(raw_edge_data, raw_nodes_data){
+  original_codes <- raw_edge_data$course_title_codes
+  raw_edge_data <- raw_edge_data %>% filter(!(is.na(prereq)&is.na(coreq)))
   codes <- raw_edge_data$course_title_codes
   codes <- codes[grepl("CS",codes)]
   edges <- lapply(codes, function(x){
@@ -334,15 +337,15 @@ vis_net_plot <- function(raw_edge_df, raw_nodes_df, course_code, courses_taken, 
     }
     nodes <- course_nodes(raw_nodes_df, edges)
     nodes$group <- as.vector(unlist(sapply(as.character(nodes$id), function(x){
-        if (x == course_code){
-          return ("Target Course")
-        }
-        else if(courses_taken_in_avail_course(courses_taken, x)){
-         return ("You have taken this course!")
-       }
-        else{
-         return ("You have yet to take this course!")
-       }
+      if (x == course_code){
+        return ("Target Course")
+      }
+      else if(courses_taken_in_avail_course(courses_taken, x)){
+        return ("You have taken this course!")
+      }
+      else{
+        return ("You have yet to take this course!")
+      }
     })))
     nodes_vis <- data.frame(id = nodes$id, 
                             label = sapply(nodes$id,display_label),
@@ -358,20 +361,20 @@ vis_net_plot <- function(raw_edge_df, raw_nodes_df, course_code, courses_taken, 
                       height = "700px", 
                       width = "1500px", 
                       background = "black")  %>%
-    visEdges(arrows = 'from', width = 1)  %>% 
-    visHierarchicalLayout(levelSeparation = 150, 
-                      sortMethod = 'directed', 
-                      blockShifting = FALSE, 
-                      edgeMinimization = FALSE, 
-                      direction = 'UD') %>%
-    visNodes(size = 25, 
-              font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
-    visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
-               selectedBy = "label") %>%  
-    visPhysics(hierarchicalRepulsion = list(nodeDistance = 150)) %>%
+      visEdges(arrows = 'from', width = 1)  %>% 
+      visHierarchicalLayout(levelSeparation = 150, 
+                            sortMethod = 'directed', 
+                            blockShifting = FALSE, 
+                            edgeMinimization = FALSE, 
+                            direction = 'UD') %>%
+      visNodes(size = 25, 
+               font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
+      visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
+                 selectedBy = "label") %>%  
+      visPhysics(hierarchicalRepulsion = list(nodeDistance = 150)) %>%
       visInteraction(navigationButtons = TRUE)
     return (vis)
-} else{
+  } else{
     new_courses <- potential_courses(raw_edge_df, course_code)
     if(nrow(new_courses) == 0){
       return (NULL)
@@ -384,7 +387,7 @@ vis_net_plot <- function(raw_edge_df, raw_nodes_df, course_code, courses_taken, 
           return ("You have taken this course!")
         }
         else if (x %in% new_course_codes){
-          return ("You fulfill at least one requirement for this course!")
+          return ("Target course fulfills at least one requirement for this course!")
         }
         else if (x == course_code){
           return ("Target Course")
@@ -403,13 +406,13 @@ vis_net_plot <- function(raw_edge_df, raw_nodes_df, course_code, courses_taken, 
       edges_vis <- data.frame(to = edges$to, from = edges$from, width = rep(2, nrow(edges)),title = edges$Relationship)
       g <- graph_from_data_frame(edges,nodes,directed=TRUE)
       vis <- visNetwork(nodes_vis, edges_vis, height = "700px", width = "1500px", background = "black")  %>%
-      visEdges(arrows = 'from', width = 1)  %>% 
-      visIgraphLayout("layout_with_lgl", root = course_code) %>%
-      visNodes(size = 25, font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
-      visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), selectedBy = "label") %>%  
-      visPhysics(hierarchicalRepulsion = list(nodeDistance = 200))%>%
+        visEdges(arrows = 'from', width = 1)  %>% 
+        visIgraphLayout("layout_with_lgl", root = course_code) %>%
+        visNodes(size = 25, font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
+        visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), selectedBy = "label") %>%  
+        visPhysics(hierarchicalRepulsion = list(nodeDistance = 200))%>%
         visInteraction(navigationButtons = TRUE)
-    return (vis)
+      return (vis)
     }
   }
 }
@@ -432,92 +435,95 @@ graph_object_multiple <- function(raw_edge_data, raw_nodes_data, courses_taken){
   return (g)
 }
 
+convert_path_to_edges <- function(raw_node, edges){
+  indices <- c()
+  for(i in 1:(length(raw_node)-1)){
+    to <- as.character(raw_node[i])
+    from <- as.character(raw_node[i+1])
+    indices <- c(indices, which(edges$to == to & edges$from == from))
+  }
+  return(edges[indices,])
+}
+
 vis_net_paths_multiple <- function(raw_edge_data, raw_nodes_data, course_code, courses_taken){
-    g <- graph_object_multiple(raw_edge_data, raw_nodes_data, courses_taken)
-    original_edges <- data.frame((as_edgelist(g)), stringsAsFactors = FALSE)
-    attributes <- data.frame((edge_attr(g)), stringsAsFactors = FALSE)
-    original_edges <- cbind(original_edges,attributes)
-    names(original_edges) <- c("to","from", "Relationship")
-    original_edges <- unique(original_edges)
-    shortest <- tryCatch({
-      all_shortest_paths(g,
-                        from = c("Source"), 
-                        to = c(course_code), 
-                        mode = "out",
-                        weights = rep(1, gsize(g)))
-    },
-    error=function(cond) {
-      return (NULL)
-    },
-    warning=function(cond) {
-      all_shortest_paths(g,
-                         from = c("Source"), 
-                         to = c(course_code), 
-                         mode = "out",
-                         weights = rep(1, gsize(g)))
-    },
-    finally={
-      print ("done")
-    })
-    if(is.null(shortest)){
-      return (NULL)
+  g <- graph_object_multiple(raw_edge_data, raw_nodes_data, courses_taken)
+  original_edges <- data.frame((as_edgelist(g)), stringsAsFactors = FALSE)
+  attributes <- data.frame((edge_attr(g)), stringsAsFactors = FALSE)
+  original_edges <- cbind(original_edges,attributes)
+  names(original_edges) <- c("to","from", "Relationship")
+  original_edges <- unique(original_edges)
+  shortest <- tryCatch({
+    all_shortest_paths(g,
+                       from = c("Source"), 
+                       to = c(course_code), 
+                       mode = "out",
+                       weights = rep(1, gsize(g)))
+  },
+  error=function(cond) {
+    return (NULL)
+  },
+  finally={
+    print ("done")
+  })
+  if(is.null(shortest)){
+    return (NULL)
+  }
+  
+  g_nodes <- data.frame(t(sapply(shortest$res, as_ids)), stringsAsFactors = FALSE)
+  g_nodes <- unique(g_nodes)
+  if(ncol(g_nodes) ==0){
+    return (NULL)
+  }
+  edges <- apply(g_nodes, 1, function(x){
+    convert_path_to_edges(raw_node = x, original_edges)
+  })
+  edges <- do.call("rbind", edges)
+  edges <- setattr(edges, "row.names", 1:nrow(edges))
+  nodes <- course_nodes(raw_nodes_data, edges)
+  nodes$group <- as.vector(unlist(sapply(as.character(nodes$id), function(x){
+    if (x == course_code){
+      return ("Target Course")
     }
-    
-    g_nodes <- data.frame(t(sapply(shortest$res, as_ids)), stringsAsFactors = FALSE)
-    g_nodes <- unique(g_nodes)
-    if(ncol(g_nodes) ==0){
-      return (NULL)
+    else if(x == "Source"){
+      return ("Source")
     }
-    edges <- apply(g_nodes, 1, function(x){
-        convert_path_to_edges(raw_nodes = x, original_edges)
-    })
-    edges <- do.call("rbind", edges)
-    edges <- setattr(edges, "row.names", 1:nrow(edges))
-    nodes <- course_nodes(raw_nodes_data, edges)
-    nodes$group <- as.vector(unlist(sapply(as.character(nodes$id), function(x){
-        if (x == course_code){
-          return ("Target Course")
-        }
-        else if(x == "Source"){
-          return ("Source")
-        }
-        else if(courses_taken_in_avail_course(courses_taken, x)){
-          return ("You have taken this course!")
-        }
-        else{
-          return ("You have yet to take this course!")
-        }
-      })))
-    nodes_vis <- data.frame(id = nodes$id, 
-                            label = sapply(nodes$id,display_label),
-                            title = paste0("<p>",nodes$id,
-                                           "<br>",nodes$course_titles,
-                                           "<br>",nodes$group,"</p>"),
-                            group = nodes$group)
-      edges_vis <- data.frame(to = edges$to, 
-                              from = edges$from, 
-                              width = rep(2, nrow(edges)),
-                              title = edges$Relationship)
-      # edges_vis$color <- color_palette[value]
-      vis <- visNetwork(nodes_vis, 
-                        edges_vis, 
-                        height = "700px", 
-                        width = "1500px", 
-                        background = "black")  %>%
-        visEdges(arrows = 'from', width = 1)  %>% 
-        visHierarchicalLayout(levelSeparation = 150, 
-                              sortMethod = 'directed', 
-                              blockShifting = FALSE, 
-                              edgeMinimization = FALSE, 
-                              direction = 'UD') %>%
-        visNodes(size = 25, 
-                 font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
-        visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
-                   selectedBy = "label")%>%
-        visPhysics(hierarchicalRepulsion = list(nodeDistance = 150),
-                   stabilization = FALSE) %>%
-        visInteraction(navigationButtons = TRUE)
-      return (vis)
+    else if(courses_taken_in_avail_course(courses_taken, x)){
+      return ("You have taken this course!")
+    }
+    else{
+      return ("You have yet to take this course!")
+    }
+  })))
+  nodes_vis <- data.frame(id = nodes$id, 
+                          label = sapply(nodes$id,display_label),
+                          title = paste0("<p>",nodes$id,
+                                         "<br>",nodes$course_titles,
+                                         "<br>",nodes$group,"</p>"),
+                          group = nodes$group)
+  edges_vis <- data.frame(to = edges$to, 
+                          from = edges$from, 
+                          width = rep(2, nrow(edges)),
+                          title = edges$Relationship)
+  # edges_vis$color <- color_palette[value]
+  vis <- visNetwork(nodes_vis, 
+                    edges_vis, 
+                    height = "700px", 
+                    width = "1500px", 
+                    background = "black")  %>%
+    visEdges(arrows = 'from', width = 1)  %>% 
+    visHierarchicalLayout(levelSeparation = 150, 
+                          sortMethod = 'directed', 
+                          blockShifting = FALSE, 
+                          edgeMinimization = FALSE, 
+                          direction = 'UD') %>%
+    visNodes(size = 25, 
+             font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
+    visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
+               selectedBy = "label")%>%
+    visPhysics(hierarchicalRepulsion = list(nodeDistance = 150),
+               stabilization = FALSE) %>%
+    visInteraction(navigationButtons = TRUE)
+  return (vis)
 }
 # vis_net_paths_multiple(edge_metadata, node_metadata, course_code = c("CS 4780"), courses_taken = c("CS 1110"))
 
@@ -553,33 +559,33 @@ vis_net_possible_courses <- function(raw_edge_df, raw_nodes_df, courses_taken){
     }
   })))
   nodes_vis <- data.frame(id = nodes$id, 
-                            label = sapply(nodes$id,display_label),
-                            title = paste0("<p>",nodes$id,
-                                           "<br>",nodes$course_titles,
-                                           "<br>",nodes$group,"</p>"),
-                            group = nodes$group)
+                          label = sapply(nodes$id,display_label),
+                          title = paste0("<p>",nodes$id,
+                                         "<br>",nodes$course_titles,
+                                         "<br>",nodes$group,"</p>"),
+                          group = nodes$group)
   edges_vis <- data.frame(to = edges$to, 
-                            from = edges$from, 
-                            width = rep(2, nrow(edges)),
-                            title = edges$Relationship)
+                          from = edges$from, 
+                          width = rep(2, nrow(edges)),
+                          title = edges$Relationship)
   vis <- visNetwork(nodes_vis, 
-                      edges_vis, 
-                      height = "1500px", 
-                      width = "1500px", 
-                      background = "black")  %>%
-      visEdges(arrows = 'from', width = 1, color= list(opacity = .4))  %>% 
-      visIgraphLayout("layout_with_lgl") %>%
-      visNodes(size = 25, 
-               font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
-      visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
-                 selectedBy = "label") %>%
-      visPhysics(hierarchicalRepulsion = list(nodeDistance = 150)) %>%
+                    edges_vis, 
+                    height = "1500px", 
+                    width = "1500px", 
+                    background = "black")  %>%
+    visEdges(arrows = 'from', width = 1, color= list(opacity = .4))  %>% 
+    visIgraphLayout("layout_with_lgl") %>%
+    visNodes(size = 25, 
+             font = list(face = 'Pt Sans', color = "white", bold = TRUE, size = 20)) %>%
+    visOptions(highlightNearest = list( enabled = TRUE, degree = 1, algorithm = "hierarchical"), 
+               selectedBy = "label") %>%
+    visPhysics(hierarchicalRepulsion = list(nodeDistance = 150)) %>%
     visInteraction(navigationButtons = TRUE)
-    return (vis)
+  return (vis)
 }
 
-modal_popup_info <- function(node_metadata, input_node){
-  g <- graph_object(raw_edge_data, raw_nodes_data)
+modal_popup_info <- function(node_metadata, edge_metadata, input_node){
+  g <- graph_object(edge_metadata, node_metadata)
   b <- betweenness(g)
   this_b <- as.numeric(b[which(names(b)==input_node)])
   row <- node_metadata %>% filter(course_title_codes == input_node)
@@ -603,4 +609,3 @@ modal_popup_info <- function(node_metadata, input_node){
     return (NULL)
   }
 }
-

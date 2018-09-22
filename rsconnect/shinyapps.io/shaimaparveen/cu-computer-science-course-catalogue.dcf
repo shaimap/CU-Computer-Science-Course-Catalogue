@@ -5,6 +5,6 @@ account: shaimaparveen
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 447475
-bundleId: 1586677
+bundleId: 1587113
 url: https://shaimaparveen.shinyapps.io/cu-computer-science-course-catalogue/
-when: 1536977664.61275
+when: 1537020070.95522

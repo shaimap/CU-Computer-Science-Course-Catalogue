@@ -1,6 +1,7 @@
 library("shiny")
 library("shinydashboard")
 library("shinydashboardPlus")
+library("shinyjs")
 library("DT")
 library("leaflet")
 library("shinyWidgets")
@@ -47,6 +48,7 @@ sidebar <- dashboardSidebar(
   )
 )
 body <- dashboardBody(
+  useShinyjs(),
   # Create a tabBox
   tabItems(
     tabItem(
@@ -68,55 +70,75 @@ body <- dashboardBody(
       tags$h2(HTML("Make a Schedule")),
       tabName = "scheduler",
       title = "Create a Schedule",
-      fluidRow(column(width = 4,
-                  box(title = "Courses of Interest",
-                   width = NULL,
+      fluidRow(boxPlus(title = "Courses of Interest",
+                      width = 5,
+                      closable = FALSE,
+                      collapsible = TRUE,
+                      status = "info",
+                      footer = radioButtons(inputId = "time_pref",
+                                            label = "Select your overall time preference.",
+                                            choiceNames = c("Before noon","Afternoon"),
+                                            choiceValues = c(TRUE, FALSE)),
                    selectizeInput("courses_selected", 
                            label = 'Select a course to add.', 
-                           choices = data$course_title_codes,
+                           choices = paste(data$course_title_codes,"|", data$course_titles),
                            selected = NULL,
                            multiple = FALSE),
                    uiOutput("ratings"),
                    actionButton("course_add", 
-                                label= "Add course")),
-                   box(title = "Time Preference",
-                       width = NULL,
-                       radioButtons(inputId = "time_pref",
-                       label = "Select your overall time preference.",
-                       choiceNames = c("Before noon","Afternoon"),
-                       choiceValues = c(TRUE, FALSE)))),
-               column(width = 8, 
-                      box(title = "Selected Courses", 
-                      width = NULL,
+                                label= "Add course",
+                                icon = icon("plus"),
+                                style="color: #fff; background-color: limegreen; border-color: limegreen")),
+               boxPlus(
+                      title = "Selected Courses", 
+                      width = 7, 
+                      closable = FALSE,
+                      collapsible = TRUE,
+                      status = "info",
+                      footer = NULL,
+                      footer_padding = FALSE,
                       dataTableOutput("course_show"),
                       actionButton("generate_scheds",
-                      label= "Generate possible schedules"),
-                      actionButton("clear_sched",
-                      label = "Clear all courses")))),
-      fluidRow(column(width = 12, 
-                box(title = "Schedules Generated",
-                width = NULL,
+                      label= "Generate possible schedules",
+                      style="color: #fff; background-color: steelblue; border-color: steelblue"))),
+      fluidRow(boxPlus(title = "Schedules Generated",
+                width = 12,
+                footer = NULL,
+                footer_padding = FALSE,
+                closable = FALSE,
+                status = "info",
+                collapsible = TRUE,
                 uiOutput("choose_sched"),
                 DT::dataTableOutput("schedule"),
                 textOutput("course_codes")),
-                box(title = "Map of Class Locations",
-                    width = NULL,
-                    leafletOutput("mymap", height = "750px"))))),
-    tabItem(
-      tags$h2(HTML("<center>Visualize your course relationships</center>")),
-      tabName = "prereq_coreq",
-      title = "Visualize relationships between your courses",
-      fluidRow(column(width = 12,
-                      box(title = "Select your courses",
-                          width = NULL,
-                          selectizeInput("past_courses", 
-                                         label = 'Which computer science courses have you taken in the past? Be sure to select all CS courses including the equivalent courses you have used AP or transfer credit for.', 
-                                         choices = node_metadata$course_title_codes,
-                                         selected = NULL,
-                                         multiple = TRUE),
-                          uiOutput("future_courses"),
-                          actionButton("generate_vis",
-                                       label= "Generate Visualizations")))),
+                boxPlus(title = "Map of Class Locations",
+                        closable = FALSE,
+                        status = "info",
+                        collapsible = TRUE,
+                        width = 12,
+                        footer = NULL,
+                        footer_padding = FALSE,
+                    leafletOutput("mymap")))),
+  tabItem(
+    tags$h2(HTML("<center>Visualize your course relationships</center>")),
+    tabName = "prereq_coreq",
+    title = "Visualize relationships between your courses",
+    fluidRow(boxPlus(title = "Select your courses",
+                        width = 12, 
+                        closable = FALSE,
+                        collapsible = TRUE,
+                        status = "info",
+                        footer = NULL,
+                        footer_padding = FALSE,
+                        selectizeInput("past_courses", 
+                                       label = 'Which computer science courses have you taken in the past? Be sure to select all CS courses including the equivalent courses you have used AP or transfer credit for.', 
+                                       choices = node_metadata$course_title_codes,
+                                       selected = NULL,
+                                       multiple = TRUE),
+                        uiOutput("future_courses"),
+                        actionButton("generate_vis",
+                                     label= "Generate Visualizations",
+                                     style="color: #fff; background-color: steelblue; border-color: steelblue"))),
     fluidRow(tabBox(width = 12,
                     tabPanel(title = "Shortest paths to target course",
                              textOutput("label1"), 
@@ -130,34 +152,34 @@ body <- dashboardBody(
                     tabPanel(title = "Courses you fulfill requirements for",
                              textOutput("label4"), 
                              visNetworkOutput("courses_possible",height = "1000px")
-                             ))))))
+                    ))))))
 
 ui <- dashboardPage(
   header = dashboardHeader(),
-                    sidebar = sidebar,
-                    body = body)
+  sidebar = sidebar,
+  body = body)
 server <- function(input, output,session) { 
   
   #CS course relationship visualizer
   output$future_courses <- renderUI({
     req(input$past_courses)
-      remaining_courses <- node_metadata$course_title_codes[!node_metadata$course_title_codes %in% input$past_courses]
-      selectizeInput("future_course_code",
-                     label = 'Name one computer science course you would want to take or are curious about.',
-                     choices = remaining_courses,
-                     selected = NULL,
-                     multiple = FALSE)
+    remaining_courses <- node_metadata$course_title_codes[!node_metadata$course_title_codes %in% input$past_courses]
+    selectizeInput("future_course_code",
+                   label = 'Name one computer science course you would want to take or are curious about.',
+                   choices = remaining_courses,
+                   selected = NULL,
+                   multiple = FALSE)
   })
-
+  
   output$label1 <- renderText({
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
-
+  
   shortest_paths <- eventReactive(input$generate_vis,{
     vis_net_paths_multiple(edge_metadata, node_metadata, course_code = input$future_course_code, courses_taken = input$past_courses)
   })
-
-
+  
+  
   output$shortest_path_vis <- renderVisNetwork({
     req(input$generate_vis)
     validate(
@@ -168,12 +190,12 @@ server <- function(input, output,session) {
       visEvents(click = "function(nodes){
                 Shiny.onInputChange('click1', nodes.nodes[0]);
                 ;}")
-  })
+})
   
   observeEvent(input$click1,{
     req(input$click1)
     req(input$generate_vis)
-    info <- modal_popup_info(node_metadata, input$click1)
+    info <- modal_popup_info(node_metadata, edge_metadata, input$click1)
     if(!is.null(info)){
       showModal(modalDialog(
         title = HTML(info)
@@ -192,7 +214,7 @@ server <- function(input, output,session) {
       
     }
   })
-    
+  
   output$label2 <- renderText({
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
@@ -209,13 +231,13 @@ server <- function(input, output,session) {
       visEvents(click = "function(nodes){
                 Shiny.onInputChange('click2', nodes.nodes[0]);
                 ;}")
-  })
-
+})
+  
   
   observeEvent(input$click2,{
     req(input$click2)
     req(input$generate_vis)
-    info <- modal_popup_info(node_metadata, input$click2)
+    info <- modal_popup_info(node_metadata, edge_metadata, input$click2)
     if(!is.null(info)){
       showModal(modalDialog(
         title = HTML(info)
@@ -227,7 +249,7 @@ server <- function(input, output,session) {
   
   other_vis <- eventReactive(input$generate_vis,{
     vis_net_plot(edge_metadata, node_metadata, course_code = input$future_course_code, courses_taken = input$past_courses, outgoing = TRUE)
-    })
+  })
   
   output$course_other <- renderVisNetwork({
     req(input$generate_vis)
@@ -244,7 +266,7 @@ server <- function(input, output,session) {
   observeEvent(input$click3,{
     req(input$click3)
     req(input$generate_vis)
-    info <- modal_popup_info(node_metadata, input$click3)
+    info <- modal_popup_info(node_metadata, edge_metadata, input$click3)
     if(!is.null(info)){
       showModal(modalDialog(
         title = HTML(info)
@@ -273,68 +295,126 @@ server <- function(input, output,session) {
   observeEvent(input$click4,{
     req(input$click4)
     req(input$generate_vis)
-    info <- modal_popup_info(node_metadata, input$click4)
+    info <- modal_popup_info(node_metadata, edge_metadata,input$click4)
     if(!is.null(info)){
       showModal(modalDialog(
         title = HTML(info)
-   ))}})
+      ))}})
+  
 
   # schedule maker
-  rv <- reactiveValues(i=0, weight = c(), course_title_codes = c(), clear = 0, gen = 0)
+  rv <- reactiveValues(i=0, weight = c(), course_title_codes = c(), gen = 0, select = NULL)
   output$ratings <- renderUI({
     if (input$courses_selected!= ""){
-      
+      x <- str_split(input$courses_selected[length(input$courses_selected)]," ") %>% unlist()
+      input_course <- paste(x[1],x[2])
       sliderInput("rating_slide", 
-                paste("Rate",input$courses_selected[length(input$courses_selected)],
+                paste("Rate",input_course,
                 "on a scale of 1 to 10 in terms of how much you value this course.", sep = " "),
                 min = 1, max = 10,value = 10)}
   })
   
-  df <- eventReactive(input$course_add | input$clear_sched,{
+  df <- eventReactive(input$course_add | !is.null(input$select_button), {
     req(input$courses_selected)
     req(input$course_add)
-    if(input$courses_selected %in% rv$course_title_codes){
+    print(paste("courseadd:",input$"course_add"))
+    print(paste("select_button:",input$"select_button"))
+    print(paste("select:", rv$select))
+    x <- str_split(input$courses_selected," ") %>% unlist()
+    input_course <- paste(x[1],x[2])
+    if(!is.null(input$select_button)){
+      if(is.null(rv$select)){
+        selectedRow <- as.numeric(substr(as.character(strsplit(input$select_button, "_")[[1]][2]),1,1))
+        rv$weight <- rv$weight[-selectedRow]
+        rv$course_title_codes <- rv$course_title_codes[-selectedRow]
+        rv$select <- input$select_button
+      }
+      else if(rv$select != input$select_button){
+        selectedRow <- as.numeric(substr(as.character(strsplit(input$select_button, "_")[[1]][2]),1,1))
+        rv$weight <- rv$weight[-selectedRow]
+        rv$course_title_codes <- rv$course_title_codes[-selectedRow]
+        rv$select <- input$select_button
+      }
+      else if(input_course %in% rv$course_title_codes){
+        rv$weight <- rv$weight
+        rv$course_title_codes <- rv$course_title_codes
+        rv$select <- rv$select
+      }
+      else{
+        rv$weight <- c(rv$weight,input$rating_slide)
+        rv$course_title_codes <- c(rv$course_title_codes, input_course)
+        rv$select <- rv$select
+      }
+    }
+    else if(input_course %in% rv$course_title_codes){
       rv$weight <-rv$weight
       rv$course_title_codes <-rv$course_title_codes
     }
     else{
-    rv$weight <- c(rv$weight,input$rating_slide)
-    rv$course_title_codes <- c(rv$course_title_codes, input$courses_selected)
+      rv$weight <- c(rv$weight,input$rating_slide)
+      rv$course_title_codes <- c(rv$course_title_codes, input_course)
     }
     df <- data.frame(course_title_codes = rv$course_title_codes, weight = rv$weight, stringsAsFactors = FALSE)
-    if(rv$clear == input$clear_sched){
-      print(rv$clear)
-      print(input$clear_sched)
-      return (df)
-    } else{
-      rv$clear <- rv$clear + 1
-      rv$weight <- NULL
-      rv$course_title_codes <- NULL
-      return (NULL)
-    }
+    print(df)
+    return (df)
   })
+  
+  shinyInput <- function(FUN, len, id, ...) {
+    inputs <- character(len)
+    for (i in seq_len(len)) {
+      inputs[i] <- as.character(FUN(paste0(id, i), ...))
+    }
+    inputs
+  }
 
   output$course_show <- renderDataTable({
     req(input$course_add)
+    if(nrow(df())==0){
+      return (NULL)
+    }
     course_titles <- c() 
     for(i in 1:length(df()$course_title_codes)){
       course <- df()$course_title_codes[i]
       course_titles[i] <- as.character(unique(data$course_titles[data$course_title_codes %in% course]))
     }
-    new_df <- data.frame("Course Title Code" = df()$course_title_codes, 
-                         "Course Title" = course_titles,
-                         "Importance Rating" = df()$weight, check.names = FALSE)
-    datatable(new_df, options = list(dom = 't',scrollY = TRUE), extensions = list("Scroller"))
+    buttons <- list()
+    
+    for(i in 1:nrow(df())){
+      buttons[[i]] <- shinyInput(actionButton, 1, paste0("button_",i),
+                                                      label = "", 
+                                                      icon = icon("minus"), 
+                                                      style="color: #fff; background-color: red; border-color: red",
+                                                      onclick = 'Shiny.onInputChange(\"select_button\",  this.id)')
+    }
+    starblocks <- list()
+    for(i in 1:nrow(df())){
+      starblocks[[i]] <- as.character(starBlock(maxstar = 10, grade = df()$weight[i], color = "lightblue"))
+    }
+    new_df <- data.frame("Course" = paste(df()$course_title_codes, "|", course_titles))
+    new_df$`Importance Rating` <- starblocks
+    new_df$` ` <- buttons
+    
+    datatable(new_df, 
+              rownames = NULL,
+              options = list(dom = 't',scrollY = TRUE, bSort = FALSE), 
+              extensions = list("Scroller")) %>% 
+              formatStyle(columns = c("Course","Importance Rating", " "), backgroundColor = "white", color = "black")%>% 
+              formatStyle(column = " ", textAlign = 'right')
     })
   
+
+
   scheds <- eventReactive(input$generate_scheds,{
     req(input$time_pref)
     req(input$generate_scheds)
-    print(paste("rvgen:",rv$generate))
     print(paste("gen:",input$generate_scheds))
+    print(paste("rvgen:", rv$gen))
     if(!is.null(df())){
     schedules <-  attain_schedules(df(), data, morning = input$time_pref)
     return (schedules)
+    }
+    else{
+      return (NULL)
     }
   })
   pretty_sched <- reactive({
@@ -345,6 +425,9 @@ server <- function(input, output,session) {
     p <- prettify_schedule(scheds()[[as.numeric(input$sched_number)]])
     return (p)
     }
+    else{
+      return (NULL)
+    }
   })
   output$choose_sched <- renderUI({
       req(input$time_pref)
@@ -352,6 +435,9 @@ server <- function(input, output,session) {
       if(!is.null(df())){
       selectInput("sched_number", paste("Select from",length(scheds()),"Potential Schedules in Order of Optimality!"),
                  choices = 1:length(scheds()),multiple = FALSE, selected = 1, width = '1400px')
+      }
+      else{
+        return (NULL)
       }
   })
   output$schedule<- DT::renderDataTable({
@@ -373,6 +459,10 @@ server <- function(input, output,session) {
                            return table;"),
               escape = FALSE, selection=list(target="cell")
               )
+      
+    }
+    else{
+      return (NULL)
     }
   })
   observeEvent(input$schedule_cell_clicked$row,{
@@ -408,13 +498,19 @@ server <- function(input, output,session) {
     if(!is.null(df())){
     create_map(scheds()[[as.numeric(input$sched_number)]], geocode_locs,unique_locs)
     }
+    else{
+      return (NULL)
+    }
   })
   output$course_codes <- renderText({
     req(input$time_pref)
     req(input$generate_scheds)
     req(input$sched_number)
     if(!is.null(df())){
-    course_numbers(scheds()[[as.numeric(input$sched_number)]])
+      course_numbers(scheds()[[as.numeric(input$sched_number)]])
+    }
+    else{
+      return (NULL)
     }
   })
 }

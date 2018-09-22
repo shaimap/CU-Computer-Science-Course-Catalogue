@@ -132,3 +132,4 @@ saveRDS(unique_loc, "unique_locs.Rda")
  id <- 1:nrow(data)
 data$id <-id
 saveRDS(data, file = "Preprocesses_course_time_data.Rda")
+write.csv(data, file = "Fall2018.csv")
