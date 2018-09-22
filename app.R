@@ -19,11 +19,10 @@ header <- dashboardHeader(
 
   # Create a tasks drop down menu
   dropdownMenu(
-    type = "tasks",
-    taskItem(
-      text = "Mission Learn Shiny Dashboard",
-      value = 10
-    )
+    type = "notifications",
+    notificationItem(text = "Access the official cornell course catalogue!", 
+                     href="https://classes.cornell.edu/browse/roster/FA18",
+                     status = "success")
   )
 )
 sidebar <- dashboardSidebar(
@@ -66,7 +65,7 @@ body <- dashboardBody(
              If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu. Most of the code for this app is on github if you are interested.</br>")
       ),
       tags$h3(
-        HTML("My Contact Info:")
+        HTML("Made by Shaima Parveen")
         ),
         socialButton(
           url = "https://www.linkedin.com/in/shaima-parveen/",
@@ -166,11 +165,10 @@ body <- dashboardBody(
                     ))))))
 
 ui <- dashboardPage(
-  header = dashboardHeader(),
+  header = header,
   sidebar = sidebar,
   body = body)
 server <- function(input, output,session) { 
-  
   #CS course relationship visualizer
   output$future_courses <- renderUI({
     req(input$past_courses)
