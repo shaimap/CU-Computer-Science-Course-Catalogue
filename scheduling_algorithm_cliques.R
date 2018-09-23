@@ -152,7 +152,6 @@ start_time_non_24_hour <- function(time){
 }
 
 attain_schedules <- function(inputs, data,morning){
-  print("debug1")
   inputted_courses <- list()
   for(i in 1:nrow(inputs)){
     x <- inputs[i,]
@@ -161,8 +160,7 @@ attain_schedules <- function(inputs, data,morning){
     weight <-rep(x$weight,length(class_types))
     inputted_courses[[i]] <- data.frame(course_title_codes, class_types, weight, stringsAsFactors = FALSE)
   }
-  print("debug2")
-  
+
   inputted_courses<- do.call("rbind",inputted_courses)
   g <- graph_object_schedule(inputted_courses,data)
   if(is.null(g)){
@@ -181,7 +179,6 @@ attain_schedules <- function(inputs, data,morning){
       indices <- nodes[clique]
       return (data %>% filter(data$id %in% indices))
     })
-    print("debug3")
   schedules <- sort_by_importance(inputted_courses,schedules,morning)
   return (schedules)
   }
