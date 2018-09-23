@@ -7,4 +7,5 @@ Currently the web app has the following features:
 
 Note: I worked on alot of this project locally so the number of commits is not reflective of the effort that has gone into this project.
 
+
 Link for web app is here: https://shaimaparveen.shinyapps.io/cu-computer-science-course-catalogue/
