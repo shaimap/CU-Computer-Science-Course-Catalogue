@@ -8,6 +8,7 @@ library("shinyWidgets")
 source("scheduling_algorithm_cliques.R")
 source("leaflet_location_vis.R")
 source("better_visualizations.R")
+source("reccomender_functions.R")
 
 
 data <- readRDS(file = "Preprocesses_course_time_data.Rda")
@@ -15,6 +16,9 @@ unique_locs <- readRDS(file = "unique_locs.Rda")
 geocode_locs<- readRDS(file = "geocode_locs.Rda")
 node_metadata <- readRDS(file = "node_metadata.Rda")
 edge_metadata <- readRDS(file = "edge_metadata.Rda")
+data_recs <- readRDS(file = "clean_data_rec.RDS")
+courses_recs <- readRDS(file = "clean_courses_rec.RDS")
+nn <- readRDS( "nearest_neighbor.RDS")
 header <- dashboardHeader(
 
   # Create a tasks drop down menu
@@ -43,6 +47,11 @@ sidebar <- dashboardSidebar(
       tabName = "prereq_coreq", 
       text = "CS Relationship Visualizer",
       icon = icon("eye")
+    ),
+    menuItem(
+      tabName = "rec_engine", 
+      text = "Recommendation Engine",
+      icon = icon("hand-o-right")
     )
   )
 )
@@ -60,7 +69,8 @@ body <- dashboardBody(
 
              <br>Summary of Features:</br>
              <br><ul><li>A scheduler into which you can input and rate your courses to retrieve all possible course schedules, and a map visualization of locations at which the selected class sections occur.</li>
-             <li>A CS course relationship visualizer which allows you to graphically observe relationships between different prerequisite and corequisite courses with respect to the courses you have taken and a course of interest.</li></ul>
+             <li>A CS course relationship visualizer which allows you to graphically observe relationships between different prerequisite and corequisite courses with respect to the courses you have taken and a course of interest.</li>
+              <li>A course reccomendation engine which reccomends the top five best courses for you to take based on your course history.</li></ul>
              <br>Note: I am just a student at Cornell and am not affiliated with the creation of the official course catalogue. I know that this app may be subject to errors.
              If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu. Most of the code for this app is on github if you are interested.</br>")
       ),
@@ -162,7 +172,38 @@ body <- dashboardBody(
                     tabPanel(title = "Courses you fulfill requirements for",
                              textOutput("label4"), 
                              visNetworkOutput("courses_possible",height = "1000px")
-                    ))))))
+                    )))),
+  tabItem(
+    tags$h1(HTML("<center>Which courses should you take next?</center>")),
+    tabName = "rec_engine",
+    title = "Which courses should you take next?",
+    fluidRow(boxPlus(title = "Select your courses",
+                     width = 12, 
+                     closable = FALSE,
+                     collapsible = TRUE,
+                     status = "info",
+                     footer = NULL,
+                     footer_padding = FALSE,
+                     selectizeInput("past_courses1", 
+                                    label = 'Which courses have you taken in the past? Be sure to select all courses including the equivalent courses you have used AP or transfer credit for.', 
+                                    choices = data_recs$course_title_codes,
+                                    selected = NULL,
+                                    multiple = TRUE),
+                     actionButton("generate_recs",
+                                  label= "Generate recommendations",
+                                  style="color: #fff; background-color: steelblue; border-color: steelblue"))),
+    fluidRow(boxPlus(title = "Course Reccomendations",
+                     width = 12, 
+                     closable = FALSE,
+                     collapsible = TRUE,
+                     status = "info",
+                     footer = NULL,
+                     footer_padding = FALSE,
+                     uiOutput("choose_rec"),
+                     DT::dataTableOutput("recs_datatable"),
+                     br(),
+                     br(),
+                     plotlyOutput("recs_plot"))))))
 
 ui <- dashboardPage(
   header = header,
@@ -515,5 +556,47 @@ server <- function(input, output,session) {
       return (NULL)
     }
   })
+  
+  #course recs
+  output$choose_rec <- renderUI({
+    req(input$generate_recs)
+    selectInput("courses_taken_recs",
+                   label = 'Select a course for which you want to see your recommendations.',
+                   choices = input$past_courses1,
+                   selected = input$past_courses1[1],
+                   multiple = FALSE)
+  })
+  
+  rec_courses <- eventReactive(input$courses_taken_recs,{
+    req(input$generate_recs)
+    req(input$courses_taken_recs)
+    return (course_recs(input$past_courses1, data_recs, courses_recs, nn))
+  })
+  rec_courses_vis <- eventReactive(input$courses_taken_recs,{
+    req(input$generate_recs)
+    req(input$courses_taken_recs)
+    return (course_recs_vis(input$past_courses1, data_recs, courses_recs, nn))
+  })
+  
+  output$recs_datatable <- renderDataTable({
+    req(input$generate_recs)
+    req(input$courses_taken_recs)
+    index <- which(input$past_courses1 == input$courses_taken_recs)
+    course_rec <- rec_courses()[[index]]
+    colnames(course_rec)[1] <- " "
+    datatable(course_rec, 
+              options = list(dom = 't',scrollY = TRUE, bSort = FALSE), 
+              extensions = list("Scroller"))
+  })
+  
+  output$recs_plot <- renderPlotly({
+    req(input$generate_recs)
+    req(input$courses_taken_recs)
+    index <- which(input$past_courses1 == input$courses_taken_recs)
+    vis <- rec_courses_vis()[[index]]
+    vis
+  })
+  
+  
 }
 shinyApp(ui, server)
