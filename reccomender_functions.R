@@ -72,7 +72,7 @@ course_recs_vis <- function(courses_taken, data, courses, nn) {
             
             return (paste(course_code, "|", course_title))
           }))
-          data_sim <- data.frame("Course Title Code" = course_codes_rec, "Cosine Similarity" = as.numeric(sim), "Text" = text, stringsAsFactors = FALSE)
+          data_sim <- data.frame("Course Title Code" = course_codes_rec, "Cosine Similarity" = as.numeric(1-nn$dist[j,]), "Text" = text, stringsAsFactors = FALSE)
           data_sim <- data_sim %>% arrange(desc(Cosine.Similarity))
           p <- plot_ly(data_sim, x = ~Course.Title.Code, y = ~Cosine.Similarity, type = 'bar', text = ~Text,
                        marker = list(color = 'rgb(158,202,225)',
