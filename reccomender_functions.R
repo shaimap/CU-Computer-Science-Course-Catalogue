@@ -50,15 +50,6 @@ course_recs <- function(courses_taken, data, courses, nn) {
 
 # Recommender function based on courses_taken
 course_recs_vis <- function(courses_taken, data, courses, nn) {
-  data <- readRDS(file = "Preprocesses_course_time_data.Rda")
-  data <- data %>% select(course_title_codes, course_titles, course_descriptions)
-  data <- data %>% unique()
-  # Clean the data
-  courses = data %>% 
-    group_by(course_descriptions) %>% 
-    select(course_descriptions) %>%
-    unique() %>%
-    as.matrix()
   data$course_descriptions <- as.character(data$course_descriptions)
   courses_taken_descriptions <- c()
   for(course in courses_taken){
@@ -70,7 +61,6 @@ course_recs_vis <- function(courses_taken, data, courses, nn) {
     for (i in 1:length(courses_taken_descriptions)) {
       for (j in 1:nrow(courses)) {
         if (courses_taken_descriptions[i] == courses[j]) {
-          sim <- 1 - nn$dist[j,]
           course_descriptions_rec <- courses[nn$id[j,]]
           course_codes_rec<- as.character(sapply(course_descriptions_rec, function(x){
             course_code <- (data[which(x == data$course_descriptions),]$course_title_code)[1]

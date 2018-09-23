@@ -18,7 +18,7 @@ library(textclean)
 
 
 
-data <- readRDS(file = "Preprocesses_course_time_data.Rda")
+data <- readRDS(file = "node_metadata.Rda")
 data <- data %>% select(course_title_codes, course_titles, course_descriptions)
 data <- data %>% unique()
 saveRDS(data, "clean_data_rec.RDS")

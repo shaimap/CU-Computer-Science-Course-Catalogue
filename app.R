@@ -50,7 +50,7 @@ sidebar <- dashboardSidebar(
     ),
     menuItem(
       tabName = "rec_engine", 
-      text = "Recommendation Engine",
+      text = "CS Recommendation Engine",
       icon = icon("hand-o-right")
     )
   )
@@ -70,12 +70,12 @@ body <- dashboardBody(
              <br>Summary of Features:</br>
              <br><ul><li>A scheduler into which you can input and rate your courses to retrieve all possible course schedules, and a map visualization of locations at which the selected class sections occur.</li>
              <li>A CS course relationship visualizer which allows you to graphically observe relationships between different prerequisite and corequisite courses with respect to the courses you have taken and a course of interest.</li>
-              <li>A course reccomendation engine which reccomends the top five best courses for you to take based on your course history.</li></ul>
+              <li>A CS course recommendation engine which recommends the top five best CS courses for you to take based on your course history.</li></ul>
              <br>Note: I am just a student at Cornell and am not affiliated with the creation of the official course catalogue. I know that this app may be subject to errors.
              If you wish to learn more about the algorithms or notify me of any errors, consult me (Shaima Parveen) at sp822@cornell.edu. Most of the code for this app is on github if you are interested.</br>")
       ),
       tags$h3(
-        HTML("Made by Shaima Parveen")
+        HTML("My Contact Info")
         ),
         socialButton(
           url = "https://www.linkedin.com/in/shaima-parveen/",
@@ -185,14 +185,14 @@ body <- dashboardBody(
                      footer = NULL,
                      footer_padding = FALSE,
                      selectizeInput("past_courses1", 
-                                    label = 'Which courses have you taken in the past? Be sure to select all courses including the equivalent courses you have used AP or transfer credit for.', 
+                                    label = 'Which computer science courses have you taken in the past? Be sure to select all CS courses including the equivalent courses you have used AP or transfer credit for.', 
                                     choices = data_recs$course_title_codes,
                                     selected = NULL,
                                     multiple = TRUE),
                      actionButton("generate_recs",
-                                  label= "Generate recommendations",
+                                  label= "Generate Recommendations",
                                   style="color: #fff; background-color: steelblue; border-color: steelblue"))),
-    fluidRow(boxPlus(title = "Course Reccomendations",
+    fluidRow(boxPlus(title = "Recommended Courses",
                      width = 12, 
                      closable = FALSE,
                      collapsible = TRUE,
@@ -222,15 +222,21 @@ server <- function(input, output,session) {
   })
   
   output$label1 <- renderText({
+    req(input$past_courses)
+    req(input$future_course_code)
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
   
   shortest_paths <- eventReactive(input$generate_vis,{
+    req(input$past_courses)
+    req(input$future_course_code)
     vis_net_paths_multiple(edge_metadata, node_metadata, course_code = input$future_course_code, courses_taken = input$past_courses)
   })
   
   
   output$shortest_path_vis <- renderVisNetwork({
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$generate_vis)
     validate(
       need(shortest_paths(),"This visualization does not exist for your selected course combinations."
@@ -243,6 +249,8 @@ server <- function(input, output,session) {
 })
   
   observeEvent(input$click1,{
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$click1)
     req(input$generate_vis)
     info <- modal_popup_info(node_metadata, edge_metadata, input$click1)
@@ -252,10 +260,14 @@ server <- function(input, output,session) {
       ))}})
   
   observeEvent(input$generate_vis,{
+    req(input$past_courses)
+    req(input$future_course_code)
     visNetworkProxy("shortest_path_vis") %>% visGetNodes()
   })
   
   output$vis1 <- renderDataTable({
+    req(input$past_courses)
+    req(input$future_course_code)
     if(!is.null(input$shortest_path_vis_nodes)){
       info <- data.frame(matrix(unlist(input$shortest_path_vis_nodes), ncol = dim(nodes)[1],
                                 byrow=T),stringsAsFactors=FALSE)
@@ -266,12 +278,18 @@ server <- function(input, output,session) {
   })
   
   output$label2 <- renderText({
+    req(input$past_courses)
+    req(input$future_course_code)
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
   prereq_vis <- eventReactive(input$generate_vis,{
+    req(input$past_courses)
+    req(input$future_course_code)
     vis_net_plot(edge_metadata, node_metadata, course_code = input$future_course_code, courses_taken = input$past_courses, outgoing = FALSE)
   })
   output$course_prereq <- renderVisNetwork({
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$generate_vis)
     validate(
       need(prereq_vis(),"This visualization does not exist for your selected course combinations."
@@ -285,6 +303,8 @@ server <- function(input, output,session) {
   
   
   observeEvent(input$click2,{
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$click2)
     req(input$generate_vis)
     info <- modal_popup_info(node_metadata, edge_metadata, input$click2)
@@ -294,14 +314,20 @@ server <- function(input, output,session) {
       ))}})
   
   output$label3 <- renderText({
+    req(input$past_courses)
+    req(input$future_course_code)
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
   
   other_vis <- eventReactive(input$generate_vis,{
+    req(input$past_courses)
+    req(input$future_course_code)
     vis_net_plot(edge_metadata, node_metadata, course_code = input$future_course_code, courses_taken = input$past_courses, outgoing = TRUE)
   })
   
   output$course_other <- renderVisNetwork({
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$generate_vis)
     validate(
       need(other_vis(), "This visualization does not exist for your selected course combinations."
@@ -314,6 +340,8 @@ server <- function(input, output,session) {
   })
   
   observeEvent(input$click3,{
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$click3)
     req(input$generate_vis)
     info <- modal_popup_info(node_metadata, edge_metadata, input$click3)
@@ -323,13 +351,19 @@ server <- function(input, output,session) {
       ))}})
   
   output$label4 <- renderText({
+    req(input$past_courses)
+    req(input$future_course_code)
     "Select a course node for closer inspection! Hover over course nodes to discover which courses you have or have not taken or could potentially take in the future."
   })
   
   possible_vis <- eventReactive(input$generate_vis,{
+    req(input$past_courses)
+    req(input$future_course_code)
     vis_net_possible_courses(edge_metadata, node_metadata, courses_taken = input$past_courses)
   })
   output$courses_possible <- renderVisNetwork({
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$generate_vis)
     validate(
       need(possible_vis(),"This visualization does not exist for your selected course combinations."
@@ -342,6 +376,8 @@ server <- function(input, output,session) {
   })
   
   observeEvent(input$click4,{
+    req(input$past_courses)
+    req(input$future_course_code)
     req(input$click4)
     req(input$generate_vis)
     info <- modal_popup_info(node_metadata, edge_metadata,input$click4)
@@ -568,33 +604,59 @@ server <- function(input, output,session) {
   })
   
   rec_courses <- eventReactive(input$courses_taken_recs,{
+    req(input$past_courses1)
     req(input$generate_recs)
     req(input$courses_taken_recs)
     return (course_recs(input$past_courses1, data_recs, courses_recs, nn))
   })
   rec_courses_vis <- eventReactive(input$courses_taken_recs,{
+    req(input$past_courses1)
     req(input$generate_recs)
     req(input$courses_taken_recs)
     return (course_recs_vis(input$past_courses1, data_recs, courses_recs, nn))
   })
   
   output$recs_datatable <- renderDataTable({
+    req(input$past_courses1)
     req(input$generate_recs)
     req(input$courses_taken_recs)
     index <- which(input$past_courses1 == input$courses_taken_recs)
     course_rec <- rec_courses()[[index]]
-    colnames(course_rec)[1] <- " "
+    colnames(course_rec)[1] <- "Click on the different courses to find out more!"
     datatable(course_rec, 
               options = list(dom = 't',scrollY = TRUE, bSort = FALSE), 
               extensions = list("Scroller"))
   })
   
   output$recs_plot <- renderPlotly({
+    req(input$past_courses1)
     req(input$generate_recs)
     req(input$courses_taken_recs)
     index <- which(input$past_courses1 == input$courses_taken_recs)
     vis <- rec_courses_vis()[[index]]
     vis
+  })
+  observeEvent(input$recs_datatable_cell_clicked$row,{
+    req(input$recs_datatable_cell_clicked$row)
+    req(input$recs_datatable_cell_clicked$col)
+    index <- which(input$past_courses1 == input$courses_taken_recs)
+    course_rec <- rec_courses()[[index]]
+    str <- course_rec[input$recs_datatable_cell_clicked$row,input$recs_datatable_cell_clicked$col]
+    v <- str_split(str, " ") %>% unlist()
+    course_code <- paste(v[1],v[2])
+    row <- data_recs %>% filter(course_title_codes==course_code)
+    if(nrow(row)!= 0){
+      course_descriptions <- gsub("\n", "", row$course_descriptions)
+      info <- paste("<center><b>",row$course_title_codes, "|",
+                    row$course_titles,"</b></center><br>Course Description: ",
+                    course_descriptions, "</br>")
+      showModal(modalDialog(
+        title = HTML(info)))
+    }
+    else{
+      showModal(modalDialog(
+        title = HTML(NULL)))
+    }
   })
   
   
